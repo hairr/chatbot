@@ -23,45 +23,45 @@ class Event(object):
             returned["text"] = None
             returned["status"] = None
             returned["time"] = None
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         elif connection["event"] == "chat:add" and connection["data"]["attrs"].has_key("wfMsg"):
             returned["user"] = [connection["data"]["attrs"]["msgParams"][1],
                                 connection["data"]["attrs"]["msgParams"][0]]
             returned["text"] = None
             returned["status"] = None
             returned["time"] = None
-            returned["made chat mod"] = True
+            returned["madechatmod"] = True
         elif connection["event"] == "ban":
             returned["user"] = [connection["data"]["attrs"]["kicedUserName"],
                                 connection["data"]["attrs"]["moderatorName"]]
             returned["text"] = None
             returned["status"] = None
             returned["time"] = connection["data"]["attrs"]["time"]
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         elif connection["event"] == "logout":
             returned["user"] = connection["data"]["attrs"]["leavingUserName"]
             returned["text"] = None
             returned["status"] = None
             returned["time"] = None
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         elif connection["event"] == "updateUser":
             returned["user"] = connection["data"]["attrs"]["name"]
             returned["text"] = None
             returned["status"] = connection["data"]["attrs"]["statusState"]
             returned["time"] = None
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         elif connection["event"] == "join":
             returned["user"] = connection["joinData"]["attrs"]["name"]
             returned["text"] = None
             returned["status"] = "here"
             returned["time"] = None
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         elif connection["event"] == "chat:add":
             returned["user"] = connection["data"]["attrs"]["name"]
             returned["text"] = connection["data"]["attrs"]["text"]
             returned["status"] = None
             returned["time"] = None
-            returned["made chat mod"] = False
+            returned["madechatmod"] = False
         return returned
 
     @property
@@ -82,7 +82,7 @@ class Event(object):
 
     @property
     def made_chat_mod(self):
-        return self.connection["made chat mod"]
+        return self.connection["madechatmod"]
 
 
 class Client(object):
@@ -297,9 +297,9 @@ class ChatBot(object):
                     self.on_join(self.c, e)
                 elif connect["event"] == "logout":
                     self.on_leave(self.c, e)
-                elif connect["event"] == "updateUser" and connection["data"]["attrs"]["statusState"] == 'away':
+                elif connect["event"] == "updateUser" and connect["data"]["attrs"]["statusState"] == 'away':
                     self.on_away(self.c, e)
-                elif connect["event"] == "updateUser" and connection["data"]["attrs"]["statusState"] == 'here':
+                elif connect["event"] == "updateUser" and connect["data"]["attrs"]["statusState"] == 'here':
                     self.on_back(self.c, e)
                 elif connect["event"] == "kick":
                     self.on_kick(self.c, e)
