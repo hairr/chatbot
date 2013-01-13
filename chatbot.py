@@ -87,6 +87,7 @@ class Event(object):
 
 class Client(object):
     def __init__(self, username, password, site):
+        self.username = username
         self.session = requests.session()
         self.wiki = site.rstrip('/')
         self.__login(username, password)
@@ -130,12 +131,14 @@ class Client(object):
         return content
 
     def __get_session(self, settings):
-        data = self.session.get("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/?name=HairyBot&key=" + settings["chatkey"]
+        data = self.session.get("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/?name=" +
+            self.username + "&key=" + settings["chatkey"]
             + "&roomId=" + str(settings["room"]) + "&jsonp=1")
         return data.text
 
     def __initialize(self, settings):
-        data = self.session.get("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/?name=HairyBot&key=" + settings["chatkey"]
+        data = self.session.get("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/?name=" +
+            self.username + "&key=" + settings["chatkey"]
             + "&roomId=" + str(settings["room"]) + "&jsonp=1")
         return data.content
 
@@ -150,7 +153,8 @@ class Client(object):
     def __send(self, settings, xhr, message):
         xhr_polling = self.__get_code(xhr)
         extras =  json.dumps({'attrs': {'msgType': 'chat', 'text': message}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" + 
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" + 
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name':'message','args': [extras]}))
         return
@@ -158,7 +162,8 @@ class Client(object):
     def __go_away(self, settings, xhr):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'away'}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" + 
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" + 
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name': 'message','args': [extras]}))
         return
@@ -166,7 +171,8 @@ class Client(object):
     def __come_back(self, settings, xhr):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'away'}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" +
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" +
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name': 'message','args': [extras]}))
         return
@@ -174,7 +180,8 @@ class Client(object):
     def __kick_user(self, settings, xhr, user):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType':'command','command':'kick','userToKick':user}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" + 
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" + 
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name': 'message', 'args': [extras]}))
         return
@@ -183,7 +190,8 @@ class Client(object):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType':'command','command':'ban','userToBan':user,
             'time':time,'reason':reason}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" + 
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" + 
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name': 'message','args': [extras]}))
         return
@@ -192,7 +200,8 @@ class Client(object):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType':'command', 'command':'ban', 'userToBan':user,
             'time':'0', 'reason':reason}})
-        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=HairyBot&key=" + 
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
+            self.username + "&key=" + 
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
             '5:::' + json.dumps({'name': 'message', 'args': [extras]}))
         return
@@ -201,7 +210,7 @@ class Client(object):
         xhr_polling = self.__get_code(xhr)
         extras = json.dumps({'attrs': {'msgType': 'command','command': 'givechatmod', 'userToPromote': user}})
         data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" +
-                                xhr_polling + "?name=HairyBot&key=" + 
+                                xhr_polling + "?name=" + self.username + "&key=" + 
                                 settings['chatkey'] + "&roomId=" + str(settings['room']) +
                                 "&t=" + self.__timestamp(),
                                 '5:::' + json.dumps({'name': 'message',
@@ -235,7 +244,7 @@ class Client(object):
         data = self.session.get("http://" + settings["host"] + ":" +
                                 settings["port"] +
                                 "/socket.io/1/xhr-polling/" + xhr_polling
-                                + "?name=HairyBot&key=" +
+                                + "?name=" + self.username + "&key=" +
                                 settings['chatkey'] + "&roomId=" +
                                 str(settings['room']) + "&t=" +
                                 time)
