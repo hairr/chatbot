@@ -97,7 +97,7 @@ it is similar to this, but run in terminal.  Execute ``pip install chatbot`` in 
 
 To make sure the installation worked, execute the following in your cmd.exe/terminal window:
 
-.. image:: chatbot/blob/master/_images/confirm.png
+.. image:: https://raw.github.com/hairr/chatbot/master/_images/confirm.png
 
 If you received an error, try executing the pip command again/make sure you successfully installed pip.
 
