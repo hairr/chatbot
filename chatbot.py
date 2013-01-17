@@ -6,6 +6,7 @@ import urllib
 
 import requests
 
+__version__ = '1.0.3a'
 
 class Event(object):
     def __init__(self, connection):
@@ -32,7 +33,7 @@ class Event(object):
             returned["time"] = None
             returned["madechatmod"] = True
         elif connection["event"] == "ban":
-            returned["user"] = [connection["data"]["attrs"]["kicedUserName"],
+            returned["user"] = [connection["data"]["attrs"]["kickedUserName"],
                                 connection["data"]["attrs"]["moderatorName"]]
             returned["text"] = None
             returned["status"] = None
@@ -56,9 +57,21 @@ class Event(object):
             returned["status"] = "here"
             returned["time"] = None
             returned["madechatmod"] = False
+        elif connection["event"] == "part":
+            returned["user"] = connection["data"]["attrs"]["name"]
+            returned["text"] = None
+            returned["status"] = None
+            returned["time"] = None
+            returned ["madechatmod"] = False
         elif connection["event"] == "chat:add":
             returned["user"] = connection["data"]["attrs"]["name"]
             returned["text"] = connection["data"]["attrs"]["text"]
+            returned["status"] = None
+            returned["time"] = None
+            returned["madechatmod"] = False
+        else:
+            returned["user"] = None
+            returned["text"] = None
             returned["status"] = None
             returned["time"] = None
             returned["madechatmod"] = False
@@ -120,7 +133,7 @@ class Client(object):
         content = json.loads(response.content)
         if content['login']['result'] != 'Success':
             print 'Couldn\'t log in: Quitting.'
-            sys.quit(1)
+            sys.exit(1)
 
     def __wikia_request(self, **kwargs):
         request = {}
@@ -170,7 +183,7 @@ class Client(object):
 
     def __come_back(self, settings, xhr):
         xhr_polling = self.__get_code(xhr)
-        extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'away'}})
+        extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'here'}})
         data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
             self.username + "&key=" +
             settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp(),
@@ -217,6 +230,21 @@ class Client(object):
                                 'args': [extras]}))
         return
 
+    def __disconnect(self, settings, xhr, nodisconnect=False):
+        xhr_polling = self.__get_code(xhr)
+        extras = json.dumps({'attrs': {'msgType': 'command','command': 'logout'}})
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" +
+                                xhr_polling + "?name=" + self.username + "&key=" + 
+                                settings['chatkey'] + "&roomId=" + str(settings['room']) +
+                                "&t=" + self.__timestamp(),
+                                '5:::' + json.dumps({'name': 'message',
+                                'args': [extras]}))
+        if not nodisconnect:
+            sys.exit(0)
+        return
+
+
+
     def send(self, message):
         self.__send(self.settings, self.xhr, message)
 
@@ -238,6 +266,9 @@ class Client(object):
     def give_chatmod(self, user):
         self.__give_chatmod(self.settings, self.xhr, user, reason)
 
+    def disconnect(self, nodisconnect=False):
+        self.__disconnect(self.settings, self.xhr, nodisconnect=nodisconnect)
+
     def __connection(self, settings, xhr):
         xhr_polling = self.__get_code(xhr)
         time = self.__timestamp()
@@ -250,8 +281,11 @@ class Client(object):
                                 time)
         content = re.findall(r'.:::(.*)', data.content)
         if content:
-            loads = json.loads(content[0])
-            return loads
+            try:
+                loads = json.loads(content[0])
+                return loads
+            except ValueError:
+                return None
         else:
             return None
 
@@ -305,6 +339,8 @@ class ChatBot(object):
                 elif connect["event"] == "join":
                     self.on_join(self.c, e)
                 elif connect["event"] == "logout":
+                    self.on_leave(self.c, e)
+                elif connect["event"] == "part":
                     self.on_leave(self.c, e)
                 elif connect["event"] == "updateUser" and connect["data"]["attrs"]["statusState"] == 'away':
                     self.on_away(self.c, e)
