@@ -1,0 +1,377 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Chatbot by hairr</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Chatbot</h1>
+        <p>A chatbot module for Wikia</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/hairr/chatbot" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/hairr/chatbot/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/hairr/chatbot/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>Examples</h1>
+
+<p><em>Documentation below</em>
+The following is nothing more than connecting to the chat, idling in the room::</p>
+
+<p>import chatbot</p>
+
+<pre><code>class MyBot(chatbot.ChatBot):
+    """
+    This class inherites the chatbot
+    """
+
+    def __init__(self, username, password, site):
+        chatbot.ChatBot__init__(self,
+                    username,
+                    password,
+                    site)
+
+
+if __name__ == '__main__':
+    bot = MyBot("MyUsername", "MyPassword", "http://mywiki.wikia.com")
+    bot.start()
+</code></pre>
+
+<p>To read the messages back to the user in terminal/command prompt, an event has to be used::</p>
+
+<pre><code>import chatbot
+
+class MyBot(chatbot.ChatBot):
+
+    def __init__(self, username, password, site):
+        chatbot.ChatBot__init__(self,
+                    username,
+                    password,
+                    site)
+
+    def on_message(self, c, e):
+        """
+        c - connection/client
+        e - event
+        This is what we'll use to gather and send data
+        """
+        print "%s: %s" % (e.user, e.text)
+
+if __name__ == '__main__':
+    bot = MyBot("MyUsername", "MyPassword", "http://mywiki.wikia.com")
+    bot.start
+</code></pre>
+
+<p>Replying multiple events in the chatroom, example being a kick and a ban::</p>
+
+<pre><code>import chatbot
+
+class MyBot(chatbot.ChatBot):
+
+    def __init__(self, username, password, site):
+        chatbot.ChatBot__init__(self,
+                    username,
+                    password,
+                    site)
+
+    def on_kick(self, c, e):
+        c.send("Oh dear!")
+
+    def on_ban(self, c, e):
+        c.send("Oh no! This is not good!")
+
+if __name__ == '__main__':
+    bot = MyBot("MyUsername", "MyPassword", "http://mywiki.wikia.com")
+    bot.start()
+</code></pre>
+
+<h1>Documentation</h1>
+
+<p>Below is the documentation for setting up and using the chatbot module.  To see a basic chatbot for
+better understanding of the documentation, please refer to the examples.</p>
+
+<h2>Requirements</h2>
+
+<p>To use this, there is one requirement:</p>
+
+<ul>
+<li>
+<code>requests &lt;http://docs.python-requests.org/en/latest/&gt;</code>_</li>
+</ul><p>The easiest way to install requests, is through the <code>Python Package Index</code>_,
+so you can install the latest release with <code>pip install requests</code>. </p>
+
+<p>If you don't have pip, <code>get pip</code>_!</p>
+
+<p>.. _Python Package Index: <a href="http://pypi.python.org">http://pypi.python.org</a>
+.. _get pip:              <a href="http://pypi.python.org/pypi/pip">http://pypi.python.org/pypi/pip</a></p>
+
+<h2>Installing</h2>
+
+<p>Installing chatbot is very simple, if using pip (see above).  If using windows, 
+open up cmd.exe/command prompt and execute <code>pip install chatbot</code>.  If using Mac OS X,
+it is similar to this, but run in terminal.  Execute <code>pip install chatbot</code> in terminal.</p>
+
+<p>To make sure the installation worked, execute the following in your cmd.exe/terminal window:</p>
+
+<p>.. image:: <a href="https://raw.github.com/hairr/chatbot/master/_images/confirm.png">https://raw.github.com/hairr/chatbot/master/_images/confirm.png</a></p>
+
+<p>If you received an error, try executing the pip command again/make sure you successfully installed pip.</p>
+
+<h2>Setting up</h2>
+
+<p>To first begin your script, you'll need to import the module::</p>
+
+<pre><code>import chatbot
+</code></pre>
+
+<p>From here, you'll need to inherit the class into your bot's class.::</p>
+
+<pre><code>class MyBot(chatbot.ChatBot):
+</code></pre>
+
+<p>Now, you'll need to set up the initalizing parts in the class, this will connect the bot.::</p>
+
+<pre><code>class MyBot(chatbot.ChatBot):
+    def __init__(self):
+        chatbot.ChatBot.__init__(self, "username", "password", "http://wiki.wikia.com")
+</code></pre>
+
+<p>After this, the bot has to be started.  Starting is very simple to do when
+executing the file::</p>
+
+<pre><code>if __name__ == '__main__':
+    bot = MyBot()
+    bot.start()
+</code></pre>
+
+<p>The complete file, without any other data, should look like so::</p>
+
+<pre><code>import chatbot
+
+class MyBot(chatbot.ChatBot):
+    def __init__(self):
+        chatbot.ChatBot.__init__(self, "username", "password", "http://wiki.wikia.com")
+
+if __name__ == '__main__':
+    bot = MyBot()
+    bot.start()
+</code></pre>
+
+<p>Now, you might be thinking: "Where did start() come from?"  It comes from the inherited class.  It gathers all the instances in the MyBot class (see below), as well as the data specified to run the bot.  So, it's very important to include that data!</p>
+
+<p>If you're worried of privacy when putting the password down, please know: There is <strong>no</strong> way of knowing the information.  It is all stored on your computer and is sent to the wiki to login (exactly the same way you log into the wiki).</p>
+
+<h2>Instances</h2>
+
+<p>In the chat, users can send message, go away, kick another user, etc.  The following are
+the instances, so an action be performed as a result.  For better understanding of how to
+include the instances, please see the examples page.</p>
+
+<p>On a message::</p>
+
+<pre><code>def on_message(self, c, e):
+    """
+    When a message is sent by a user, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user joins the chat::</p>
+
+<pre><code>def on_join(self, c, e):
+    """
+    When a user joins the chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user leaves the chat::</p>
+
+<pre><code>def on_leave(self, c, e):
+    """
+    When a user leaves the chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user goes "away" in chat::</p>
+
+<pre><code>def on_away(self, c, e):
+    """
+    When a user goes away in chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user comes back from being "away" in chat::</p>
+
+<pre><code>def on_back(self, c, e):
+    """
+    When a user comes back from being away in chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user is kicked from chat::</p>
+
+<pre><code>def on_kick(self, c, e):
+    """
+    When a user is kicked from chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user is banned from chat::</p>
+
+<pre><code>def on_ban(self, c, e):
+    """
+    When a user is banned from chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When a user is given chat moderator rights from chat::</p>
+
+<pre><code>def on_chatmod(self, c, e):
+    """
+    When a user is given the chat moderator rights in chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<p>When the bot joins the chat::</p>
+
+<pre><code>def on_welcome(self, c, e):
+    """
+    When the bot joins the chat, anything here will be performed.
+    """
+    pass
+</code></pre>
+
+<h2>Connection/Client</h2>
+
+<p>After connecting to the chatroom, there are several connection commands that will
+allow a user/bot to perform actions.</p>
+
+<p>.. function:: c.send(message)</p>
+
+<pre><code>Sends a message to the chatroom
+
+:param message: Message to be sent
+</code></pre>
+
+<p>.. function:: c.go_away()</p>
+
+<pre><code>Goes "away" in the chatroom, as the bot will not go "away" by default
+</code></pre>
+
+<p>.. function:: c.come_back()</p>
+
+<pre><code>Comes back from the chat room, after being away
+</code></pre>
+
+<p>.. function:: c.kick_user(user)</p>
+
+<pre><code>Kicks a user from the chatroom
+
+:param user: User to kick
+.. note::
+    If the user/bot does not have the chatmoderator right, a kick will not preform.
+</code></pre>
+
+<p>.. function:: c.ban_user(user[, time=3600[, reason="Misbehaving in chat"]])</p>
+
+<pre><code>Bans a user from the chatroom.
+
+:param user: User to ban
+:param time: Time of ban, in seconds
+:param reason: Reason of the ban
+:type time: integer
+:type reason: string
+.. note::
+    if the user/bot does not have the chatmoderator right, a ban will not preform
+</code></pre>
+
+<p>.. function:: c.end_ban(user[, reason="Ending chat ban"])</p>
+
+<pre><code>Ends a chatban for a user
+
+:param user: User to unban
+:param reason: Reason of the unbanning
+:type reason: string
+.. note::
+    If the user/bot does not have the chatmoderator right, the ban can not be ended
+</code></pre>
+
+<p>.. function:: c.give_chatmod(user)</p>
+
+<pre><code>Gives the chatmoderator right to a user.
+
+:param user: User to give the chat moderator right to
+
+.. note::
+        If the user/bot does not have the sysop right, the chatmoderator right can not be given
+</code></pre>
+
+<h2>Events</h2>
+
+<p>In the chat room, there are few events that can be gathered for information</p>
+
+<p>.. data:: e.user</p>
+
+<pre><code>Retrieves the user of the event.
+
+Note: ``on_kick``, ``on_chatmod`` and ``on_ban`` return arrays with the users involved.
+
+:rtype: string
+</code></pre>
+
+<p>.. data:: e.text</p>
+
+<pre><code>Retrieves the text from the message.
+
+:rtype: string or None
+</code></pre>
+
+<p>.. data:: e.status</p>
+
+<pre><code>Retrieves the status of the user for ``on_away`` and ``on_back``.
+
+:rtype: string or None
+</code></pre>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/hairr">hairr</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
