@@ -6,7 +6,7 @@ import urllib
 
 import requests
 
-__version__ = '1.0.3a'
+__version__ = '1.0.4a'
 
 class Event(object):
     def __init__(self, connection):
@@ -79,23 +79,38 @@ class Event(object):
 
     @property
     def user(self):
-        return self.connection["user"]
+        if self.connection['user']:
+            return self.connection["user"].decode('string_escape')
+        else:
+            return None
 
     @property
     def text(self):
-        return self.connection["text"]
+        if self.connection['text']:
+            return self.connection["text"].decode('string_escape')
+        else:
+            return None
 
     @property
     def status(self):
-        return self.connection["status"]
+        if self.connection['status']:
+            return self.connection["status"].decode('string_escape')
+        else:
+            return None
 
     @property
     def time(self):
-        return self.connection["time"]
+        if self.connection['time']:
+            return self.connection["time"].decode('string_escape')
+        else:
+            return None
 
     @property
     def made_chat_mod(self):
-        return self.connection["madechatmod"]
+        if self.connection['madechatmod']:
+            return self.connection["madechatmod"].decode('string_escape')
+        else:
+            return False
 
 
 class Client(object):
