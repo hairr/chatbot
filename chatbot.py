@@ -3,10 +3,11 @@ import sys
 import time
 import json
 import urllib
+import threading
 
 import requests
 
-__version__ = '1.0.4a'
+__version__ = '1.1b'
 
 class Event(object):
     def __init__(self, connection):
@@ -80,58 +81,69 @@ class Event(object):
     @property
     def user(self):
         if self.connection['user']:
-            return self.connection["user"].decode('string_escape')
+            return self.connection["user"]
         else:
             return None
 
     @property
     def text(self):
         if self.connection['text']:
-            return self.connection["text"].decode('string_escape')
+            return self.connection["text"]
         else:
             return None
 
     @property
     def status(self):
         if self.connection['status']:
-            return self.connection["status"].decode('string_escape')
+            return self.connection["status"]
         else:
             return None
 
     @property
     def time(self):
         if self.connection['time']:
-            return self.connection["time"].decode('string_escape')
+            return self.connection["time"]
         else:
             return None
 
     @property
     def made_chat_mod(self):
         if self.connection['madechatmod']:
-            return self.connection["madechatmod"].decode('string_escape')
+            return self.connection["madechatmod"]
         else:
             return False
 
+class PrivateMessage(threading.Thread):
+    def __init__(self, user, username, password, wiki, key):
+        threading.Thread.__init__(self)
+        self.c = Client(username, password, wiki, priv=user, key=key)
+
+    def send(self, message, xhr):
+        self.c.send(message, xhr=xhr)
 
 class Client(object):
-    def __init__(self, username, password, site):
+    def __init__(self, username, password, site, priv=None, key=None):
         self.username = username
+        self.password = password
         self.session = requests.session()
         self.wiki = site.rstrip('/')
         self.__login(username, password)
         data = self.__wikia_request(controller="Chat", format="json")
         self.settings = {}
-        self.settings["chatkey"] = data["chatkey"]
+        if key:
+            self.settings["chatkey"] = key
+        else:
+            self.settings['chatkey'] = data['chatkey']
         self.settings["port"] = data["nodePort"]
         self.settings["host"] = data["nodeHostname"]
-        self.settings["room"] = data["roomId"]
+        if priv:
+            self.settings["room"] = self.__private_message_id(priv)
+        else:
+            self.settings["room"] = data["roomId"]
         self.settings["chatmod"] = data["isChatMod"]
         self.settings["session"] = self.__get_session(self.settings)
         self.xhr = self.__initialize(self.settings)
-
-    def __timestamp(self):
-        unix = time.time()
-        return str(round(unix, 0))
+        self.priv_dict = {}
 
     def __login(self, username, password):
         login_data = {
@@ -155,6 +167,7 @@ class Client(object):
         for karg in kwargs:
             request[karg] = kwargs[karg]
         response = self.session.get(self.wiki + "/wikia.php",params=request)
+        print response.content
         content = json.loads(response.content)
         return content
 
@@ -170,6 +183,10 @@ class Client(object):
             + "&roomId=" + str(settings["room"]) + "&jsonp=1")
         return data.content
 
+    def __timestamp(self):
+        unix = time.time()
+        return str(round(unix, 0))
+
     def __get_code(self, xhr):
         regex = re.compile(r'io\..*?\(\"(.*?):.*?\"\);')
         array = regex.findall(xhr)
@@ -180,6 +197,9 @@ class Client(object):
 
     def __send(self, settings, xhr, message):
         xhr_polling = self.__get_code(xhr)
+        print "http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" \
+            + self.username + "&key=" \
+            + settings['chatkey'] + "&roomId=" + str(settings['room']) + "&t=" + self.__timestamp()
         extras =  json.dumps({'attrs': {'msgType': 'chat', 'text': message}})
         data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" + xhr_polling + "?name=" +
             self.username + "&key=" + 
@@ -258,10 +278,44 @@ class Client(object):
             sys.exit(0)
         return
 
+    def __private_message_id(self, user):
+        data = self.session.post(self.wiki + "/index.php?action=ajax&rs=ChatAjax&method=getPrivateRoomId&users=[\"" +
+                                    user + "\",\"" + self.username + "\"]")
+        print data.content
+        content = json.loads(data.content)
+        roomid = content['id']
+        return roomid
 
+    def __open_private_chat(self, settings, xhr, user, room):
+        xhr_polling = self.__get_code(xhr)
+        extras = json.dumps({'attrs': {'msgType': 'command','command': 'openprivate', 'roomId':str(room),
+                                        'users': [user]}})
+        data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" +
+                                xhr_polling + "?name=" + self.username + "&key=" + 
+                                settings['chatkey'] + "&roomId=" + str(settings["room"]) +
+                                "&t=" + self.__timestamp(),
+                                '5:::' + json.dumps({'name': 'message',
+                                'args': [extras]}))
+        return
 
-    def send(self, message):
-        self.__send(self.settings, self.xhr, message)
+    def __private_message(self, settings, user, message):
+        if self.priv_dict.has_key(user):
+            xhr = self.__initialize(settings)
+            self.__open_private_chat(settings, xhr, user, self.__private_message_id(user))
+            self.priv_dict[user].send(message, xhr)
+        else:
+            self.priv_dict[user] = PrivateMessage(user, self.username,
+                                                self.password, self.wiki, settings['chatkey'])
+            self.__private_message(settings, user, message)
+
+    def send(self, message, xhr=None):
+        if xhr:
+            self.__send(self.settings, xhr, message)
+        else:
+            self.__send(self.settings, self.xhr, message)
+
+    def private_message(self, user, message):
+        self.__private_message(self.settings, user, message)
 
     def go_away(self):
         self.__go_away(self.settings, self.xhr)
@@ -294,7 +348,7 @@ class Client(object):
                                 settings['chatkey'] + "&roomId=" +
                                 str(settings['room']) + "&t=" +
                                 time)
-        content = re.findall(r'.:::(.*)', data.content)
+        content = re.findall(r'.:::(.*)', data.content.decode('utf8'))
         if content:
             try:
                 loads = json.loads(content[0])
@@ -309,11 +363,12 @@ class Client(object):
         return var
 
 
-class ChatBot(object):
+class ChatBot(threading.Thread):
     def __init__(self, username, password, site):
         self.username = username
         self.password = password
         self.c = Client(username, password, site)
+        threading.Thread.__init__(self)
 
     def on_welcome(self, c, e):
         pass
@@ -342,7 +397,7 @@ class ChatBot(object):
     def on_chatmod(self, c, e):
         pass
 
-    def start(self):
+    def run(self):
         in_chat = 0
         while 1:
             connect = self.c.connection()
